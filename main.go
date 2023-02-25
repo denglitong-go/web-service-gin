@@ -49,7 +49,10 @@ func main() {
 
 	// the Gin way
 	router := gin.Default()
+
 	router.GET("/albums", getAlbums, requestInterceptor)
+	router.POST("/albums", postAlbums)
+
 	log.Fatal(router.Run(":8080"))
 }
 
@@ -79,4 +82,16 @@ func getAlbums(c *gin.Context) {
 	// Call Context.IndentedJSON to serialize the struct into JSON
 	// and add it to the response.
 	c.IndentedJSON(http.StatusOK, albums)
+}
+
+// postAlbums adds an album from JSON received in the request body.
+func postAlbums(c *gin.Context) {
+	var newAlbum album
+	// User Context.BindJSON to bind the request body to newAlbum.
+	if err := c.BindJSON(&newAlbum); err != nil {
+		return
+	}
+
+	albums = append(albums, newAlbum)
+	c.IndentedJSON(http.StatusCreated, newAlbum)
 }

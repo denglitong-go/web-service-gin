@@ -21,6 +21,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 )
@@ -42,8 +43,14 @@ var (
 )
 
 func main() {
-	http.HandleFunc("/", defaultHandler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	// the Go default way without Gin
+	// http.HandleFunc("/", defaultHandler)
+	// log.Fatal(http.ListenAndServe(":8080", nil))
+
+	// the Gin way
+	router := gin.Default()
+	router.GET("/albums", getAlbums, requestInterceptor)
+	log.Fatal(router.Run(":8080"))
 }
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
@@ -53,4 +60,23 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprintf(w, string(body))
+}
+
+func requestInterceptor(c *gin.Context) {
+	// TODO to intercept c.ResponseWriter
+	log.Printf("request: %v\n", c.Request)
+
+	// the Context.IndentedJSON/JSON is not a terminal operation,
+	// the JSON result will be appended to the response writer if there are
+	// multiple handler are registered of the same request path.
+	// c.IndentedJSON(http.StatusOK, albums[0])
+}
+
+// getAlbums responds with the list of all albums as JSON
+// gin.Context is the most important part of Gin. It carries request details, validates and
+// serializes JSON, and more.
+func getAlbums(c *gin.Context) {
+	// Call Context.IndentedJSON to serialize the struct into JSON
+	// and add it to the response.
+	c.IndentedJSON(http.StatusOK, albums)
 }
